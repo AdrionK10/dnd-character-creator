@@ -1,0 +1,61 @@
+@page "/characters"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>Characters</PageTitle>
+
+<h1>Characters</h1>
+<p class="muted">This page calls the API read example. Add create, update, and delete next.</p>
+
+@if (_error is not null)
+{
+    <p class="error">@_error</p>
+}
+else if (_characters is null)
+{
+    <p>Loading...</p>
+}
+else if (_characters.Count == 0)
+{
+    <p>No characters yet.</p>
+}
+else
+{
+    <ul>
+        @foreach (var character in _characters)
+        {
+            <li>
+                <strong>@character.Name</strong>
+                — @character.Race @character.CharacterClass (Level @character.Level)
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<CharacterListItem>? _characters;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var client = HttpClientFactory.CreateClient("Api");
+            _characters = await client.GetFromJsonAsync<List<CharacterListItem>>("api/characters")
+                ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Could not reach the API. Start CharacterCreator.Api, then refresh this page.";
+        }
+    }
+
+    private sealed class CharacterListItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Race { get; set; } = string.Empty;
+        public string CharacterClass { get; set; } = string.Empty;
+        public int Level { get; set; }
+    }
+}

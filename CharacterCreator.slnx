@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CharacterCreator.Api/CharacterCreator.Api.csproj" />
+    <Project Path="src/CharacterCreator.Data/CharacterCreator.Data.csproj" />
+    <Project Path="src/CharacterCreator.Web/CharacterCreator.Web.csproj" />
+  </Folder>
+</Solution>

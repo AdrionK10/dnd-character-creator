@@ -1,0 +1,9 @@
+@CharacterCreator.Api_HostAddress = http://localhost:5057
+
+GET {{CharacterCreator.Api_HostAddress}}/api/characters
+Accept: application/json
+
+###
+
+GET {{CharacterCreator.Api_HostAddress}}/api/characters/1
+Accept: application/json
