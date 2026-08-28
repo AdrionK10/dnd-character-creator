@@ -1,13 +1,20 @@
 using CharacterCreator.Api.Interfaces;
 using CharacterCreator.Api.Services;
 using CharacterCreator.Data;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+var sqlite = new SqliteConnectionStringBuilder(
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Missing connection string 'DefaultConnection'."));
+sqlite.DataSource = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, sqlite.DataSource));
+
 builder.Services.AddDbContext<CharacterDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(sqlite.ConnectionString));
 builder.Services.AddScoped<ICharacterService, CharacterService>();
 builder.Services.AddCors(options =>
 {

@@ -26,7 +26,7 @@ dotnet run --project src/CharacterCreator.Web
 
 Local Development uses HTTP so you do not have to trust the ASP.NET HTTPS developer certificate first.
 
-The first API start applies the EF migration and creates `src/CharacterCreator.Api/characters.db`.
+The first API start applies the EF migration and creates `src/CharacterCreator.Data/characters.db`.
 
 ## What is already wired
 
