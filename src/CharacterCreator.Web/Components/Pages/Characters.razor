@@ -1,10 +1,13 @@
 @page "/characters"
+@using CharacterCreator.Web.Components.Modular
+@using CharacterCreator.Web.Models
 @inject IHttpClientFactory HttpClientFactory
 
 <PageTitle>Characters</PageTitle>
 
 <h1>Characters</h1>
 <p class="text-secondary">This page calls the API read example. Add create, update, and delete next.</p>
+<CharacterCreatorCard/>
 
 @if (errorMessage is not null)
 {
@@ -21,18 +24,19 @@ else if (_characters.Count == 0)
 else
 {
     <ul>
-        @foreach (var character in _characters)
+        @foreach (var character in _displayCharacters)
         {
             <li>
                 <strong>@character.Name</strong>
-                — @character.Race @character.CharacterClass (Level @character.Level)
+                — @character.Species.Name @character.CharacterClass.Name @character.Background.Name
             </li>
         }
     </ul>
 }
 
 @code {
-    private List<CharacterListItem>? _characters;
+    private List<Character> _characters;
+    private List<DisplayCharacter> _displayCharacters;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -40,21 +44,43 @@ else
         try
         {
             var client = HttpClientFactory.CreateClient("Api");
-            _characters = await client.GetFromJsonAsync<List<CharacterListItem>>("api/characters")
-                ?? [];
+            _characters = await client.GetFromJsonAsync<List<Character>>("api/characters")
+                ?? new();
+            await BuildList();
         }
         catch (HttpRequestException)
         {
             errorMessage = "Could not reach the API. Start CharacterCreator.Api, then refresh this page.";
         }
+        
     }
 
-    public sealed class CharacterListItem
+    private async Task BuildList()
+    {
+        var client = HttpClientFactory.CreateClient("Api");
+        _characters = await client.GetFromJsonAsync<List<Character>>("api/characters") ?? new List<Character>();
+        var allClasses = new List<CharacterClass>();
+        var allSpecies = new List<Species>();
+        var allBackground = new List<Background>();
+        foreach (var character in _characters)
+        {
+            var displayCharacter = new DisplayCharacter();
+            displayCharacter.Name = character.Name;
+            var foundSpecies = allSpecies.First(x => x.Id == character.SpeciesId);
+            var foundBackground = allBackground.First(x => x.Id == character.BackgroundId);
+            var foundClass = allClasses.First(x => x.Id == character.ClassId);
+            displayCharacter.Species = foundSpecies;
+            displayCharacter.Background = foundBackground;
+            displayCharacter.CharacterClass = foundClass;
+        }
+    }
+
+    public sealed class DisplayCharacter
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string Race { get; set; } = string.Empty;
-        public string CharacterClass { get; set; } = string.Empty;
-        public int Level { get; set; }
+        public Species Species { get; set; }
+        public CharacterClass CharacterClass { get; set; }
+        public Background Background { get; set; }
     }
 }
