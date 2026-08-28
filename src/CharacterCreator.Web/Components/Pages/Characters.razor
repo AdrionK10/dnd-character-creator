@@ -6,9 +6,9 @@
 <h1>Characters</h1>
 <p class="muted">This page calls the API read example. Add create, update, and delete next.</p>
 
-@if (error is not null)
+@if (errorMessage is not null)
 {
-    <p class="error">@error</p>
+    <p class="error">@errorMessage</p>
 }
 else if (_characters is null)
 {
@@ -33,7 +33,7 @@ else
 
 @code {
     private List<CharacterListItem>? _characters;
-    private string? error;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -45,13 +45,8 @@ else
         }
         catch (HttpRequestException)
         {
-            error = "Could not reach the API. Start CharacterCreator.Api, then refresh this page.";
+            errorMessage = "Could not reach the API. Start CharacterCreator.Api, then refresh this page.";
         }
-        
-        private CharacterListItem? _character;
-        
-        
-        
     }
 
     public sealed class CharacterListItem
