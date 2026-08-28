@@ -1,7 +1,4 @@
 @page "/characters"
-@using Microsoft.AspNetCore.Components.Web
-@using Microsoft.AspNetCore.Components.Web
-@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @inject IHttpClientFactory HttpClientFactory
 
 <PageTitle>Characters</PageTitle>
@@ -9,9 +6,9 @@
 <h1>Characters</h1>
 <p class="muted">This page calls the API read example. Add create, update, and delete next.</p>
 
-@if (_error is not null)
+@if (error is not null)
 {
-    <p class="error">@_error</p>
+    <p class="error">@error</p>
 }
 else if (_characters is null)
 {
@@ -36,27 +33,10 @@ else
 
 @code {
     private List<CharacterListItem>? _characters;
-    private string? _error;
-
-    private class Character
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Race { get; set; } = string.Empty;
-        public int cookieCount = 2;
-    }
+    private string? error;
 
     protected override async Task OnInitializedAsync()
     {
-
-        Character character = new();
-        
-        character.Id = 1;
-        character.Name = string.Empty;
-        character.Race = string.Empty;
-        character.cookieCount = 2;
-        
-        
         try
         {
             var client = HttpClientFactory.CreateClient("Api");
@@ -65,7 +45,7 @@ else
         }
         catch (HttpRequestException)
         {
-            _error = "Could not reach the API. Start CharacterCreator.Api, then refresh this page.";
+            error = "Could not reach the API. Start CharacterCreator.Api, then refresh this page.";
         }
         
         private CharacterListItem? _character;
