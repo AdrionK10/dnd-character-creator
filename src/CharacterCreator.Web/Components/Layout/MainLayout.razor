@@ -1,14 +1,28 @@
 ﻿@inherits LayoutComponentBase
 
-<header class="app-header">
-    <a class="app-title" href="/">Character Creator</a>
-    <nav class="app-nav">
-        <NavLink href="/" Match="NavLinkMatch.All">Home</NavLink>
-        <NavLink href="/characters">Characters</NavLink>
-    </nav>
-</header>
+<nav class="navbar navbar-expand-md bg-dark" data-bs-theme="dark">
+    <div class="container">
+        <a class="navbar-brand" href="/">Character Creator</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#app-nav" aria-controls="app-nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="app-nav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">Home</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/characters">Characters</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/setup">Setup</NavLink>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
-<main class="app-main">
+<main class="container py-4">
     @Body
 </main>
 

@@ -1,0 +1,138 @@
+@page "/setup"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>Setup</PageTitle>
+
+<h1 class="mb-3">Setup</h1>
+<p class="text-secondary">
+    Load popular D&amp;D species, classes, and backgrounds into the database.
+    Running this more than once skips names that already exist.
+</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <button class="btn btn-primary" type="button" disabled="@_busy" @onclick="SeedAsync">
+            @(_busy ? "Populating..." : "Populate popular D&D data")
+        </button>
+        @if (_status is not null)
+        {
+            <p class="mt-3 mb-0 text-success">@_status</p>
+        }
+        @if (_error is not null)
+        {
+            <p class="mt-3 mb-0 text-danger">@_error</p>
+        }
+    </div>
+</div>
+
+@if (_species is not null)
+{
+    <div class="row g-4">
+        <div class="col-md-4">
+            <h2 class="h5">Species (@_species.Count)</h2>
+            <ul class="list-group">
+                @foreach (var item in _species)
+                {
+                    <li class="list-group-item">
+                        <strong>@item.Name</strong>
+                        <div class="small text-secondary">@item.Description</div>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h2 class="h5">Classes (@_classes.Count)</h2>
+            <ul class="list-group">
+                @foreach (var item in _classes)
+                {
+                    <li class="list-group-item">
+                        <strong>@item.Name</strong>
+                        <div class="small text-secondary">@item.Description</div>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h2 class="h5">Backgrounds (@_backgrounds.Count)</h2>
+            <ul class="list-group">
+                @foreach (var item in _backgrounds)
+                {
+                    <li class="list-group-item">
+                        <strong>@item.Name</strong>
+                        <div class="small text-secondary">@item.Description</div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _busy;
+    private string? _status;
+    private string? _error;
+    private List<NamedItem> _species = [];
+    private List<NamedItem> _classes = [];
+    private List<NamedItem> _backgrounds = [];
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task SeedAsync()
+    {
+        _busy = true;
+        _error = null;
+        _status = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("Api");
+            var response = await client.PostAsync("api/setup/seed", null);
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<SeedResult>();
+            if (result is not null)
+            {
+                _status = $"Added {result.SpeciesAdded} species, {result.ClassesAdded} classes, and {result.BackgroundsAdded} backgrounds.";
+            }
+
+            await LoadAsync();
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Could not reach the API. Start CharacterCreator.Api, then try again.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            var client = HttpClientFactory.CreateClient("Api");
+            _species = await client.GetFromJsonAsync<List<NamedItem>>("api/species") ?? [];
+            _classes = await client.GetFromJsonAsync<List<NamedItem>>("api/characterclass") ?? [];
+            _backgrounds = await client.GetFromJsonAsync<List<NamedItem>>("api/background") ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Could not reach the API. Start CharacterCreator.Api, then refresh this page.";
+        }
+    }
+
+    private sealed class NamedItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
+    private sealed class SeedResult
+    {
+        public int SpeciesAdded { get; set; }
+        public int ClassesAdded { get; set; }
+        public int BackgroundsAdded { get; set; }
+    }
+}

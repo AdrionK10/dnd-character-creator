@@ -16,6 +16,10 @@ sqlite.DataSource = Path.GetFullPath(Path.Combine(builder.Environment.ContentRoo
 builder.Services.AddDbContext<CharacterDbContext>(options =>
     options.UseSqlite(sqlite.ConnectionString));
 builder.Services.AddScoped<ICharacterService, CharacterService>();
+builder.Services.AddScoped<ISpeciesService, SpeciesService>();
+builder.Services.AddScoped<ICharacterClassService, CharacterClassService>();
+builder.Services.AddScoped<IBackgroundService, CharacterCreator.Api.Services.BackgroundService>();
+builder.Services.AddScoped<ISetupService, SetupService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("BlazorClient", policy =>
