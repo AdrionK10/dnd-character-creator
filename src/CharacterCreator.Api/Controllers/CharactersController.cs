@@ -6,15 +6,8 @@ namespace CharacterCreator.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CharacterController : ControllerBase
+public class CharactersController(ICharacterService characterService) : ControllerBase
 {
-    private readonly ICharacterService characterService;
-
-    public CharacterController(ICharacterService characterService)
-    {
-        this.characterService = characterService;
-    }
-
     [HttpGet]
     public async Task<ActionResult<List<Character>>> GetAll()
     {

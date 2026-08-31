@@ -1,27 +1,30 @@
 ﻿@using CharacterCreator.Web.Models
+@rendermode InteractiveServer
 @inject IHttpClientFactory HttpClientFactory
+
 <div class="character-card">
     <input class="character-input" type="text" placeholder="CHARACTER NAME" @bind="character.Name"/>
-    <select class="character-input" name="species">
+    <select class="character-input" name="species" @bind="character.SpeciesId">
         @foreach (var species in allSpecies)
         {
-            <option @bind="character.SpeciesId" value="@species.Id">@species.Name</option>
+            <option value="@species.Id">@species.Name</option>
         }
     </select>
-    <select class="character-input" name="characterClass">
-        @foreach (var c in allCharacterClasses)//c is characterclass
+    <select class="character-input" name="characterClass" @bind="character.ClassId">
+        @foreach (var c in allCharacterClasses)
         {
-            <option @bind="character.ClassId" value="@c.Id">@c.Name</option>
+            <option value="@c.Id">@c.Name</option>
         }
     </select>
-    <select class="character-input" name="background">
-        @foreach (var c in allBackgrounds)//c is characterclass
+    <select class="character-input" name="background" @bind="character.BackgroundId">
+        @foreach (var c in allBackgrounds)
         {
-            <option @bind="character.BackgroundId" value="@c.Id">@c.Name</option>
+            <option value="@c.Id">@c.Name</option>
         }
     </select>
     <div>
-        <button onclick="@SaveCharacter">save</button>    
+        <button type="button" @onclick="SaveCharacter">Save</button>
+        @message
     </div>
 </div>
 
@@ -44,6 +47,7 @@
     private List<Species> allSpecies = new List<Species>();
     private List<Background> allBackgrounds = new List<Background>();
     private List<CharacterClass> allCharacterClasses = new List<CharacterClass>();
+    private string message = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -52,6 +56,7 @@
 
     private async Task LoadListsAsync()
     {
+        message = "";
         var client = HttpClientFactory.CreateClient("Api");
         allSpecies = await client.GetFromJsonAsync<List<Species>>("api/species") ?? new List<Species>();
         allBackgrounds = await client.GetFromJsonAsync<List<Background>>("api/background") ?? new List<Background>();
@@ -61,6 +66,7 @@
     private async Task SaveCharacter()
     {
         var client = HttpClientFactory.CreateClient("Api");
-        await client.PostAsJsonAsync("api/characters/create", character);
+        var response = await client.PostAsJsonAsync("api/characters", character);
+        message = await response.Content.ReadAsStringAsync();
     }
 }
