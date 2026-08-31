@@ -13,3 +13,11 @@ h1:focus {
 .validation-message {
     color: #e50000;
 }
+
+.character-thumb {
+    display: block;
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    margin-top: 0.35rem;
+}

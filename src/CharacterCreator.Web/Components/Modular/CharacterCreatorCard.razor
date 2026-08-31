@@ -22,6 +22,11 @@
             <option value="@c.Id">@c.Name</option>
         }
     </select>
+    <InputFile class="character-input" accept="image/*" OnChange="OnImageSelected" />
+    @if (character.CharacterImage.Length > 0)
+    {
+        <img class="character-preview" src="@ImageDataUrl.FromBytes(character.CharacterImage)" alt="Character preview" />
+    }
     <div>
         <button type="button" @onclick="SaveCharacter">Save</button>
         @message
@@ -33,13 +38,21 @@
         background-color: #d4b8b4;
         padding: 20px;
         border-radius: 5px;
-        height: 480px;
+        min-height: 480px;
         width: 300px;
     }
     .character-input {
-        margin: 0px 10px;
+        margin: 0px 10px 10px;
         width: 200px;
         color: black;
+    }
+    .character-preview {
+        display: block;
+        margin: 10px;
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+        background: #eee;
     }
 </style>
 @code {
@@ -61,6 +74,23 @@
         allSpecies = await client.GetFromJsonAsync<List<Species>>("api/species") ?? new List<Species>();
         allBackgrounds = await client.GetFromJsonAsync<List<Background>>("api/background") ?? new List<Background>();
         allCharacterClasses = await client.GetFromJsonAsync<List<CharacterClass>>("api/characterclass") ?? new List<CharacterClass>();
+    }
+
+    private async Task OnImageSelected(InputFileChangeEventArgs args)
+    {
+        const long maxBytes = 2 * 1024 * 1024;
+        var file = args.File;
+        if (file.Size > maxBytes)
+        {
+            message = "Image must be 2 MB or smaller.";
+            return;
+        }
+
+        await using var stream = file.OpenReadStream(maxBytes);
+        using var memory = new MemoryStream();
+        await stream.CopyToAsync(memory);
+        character.CharacterImage = memory.ToArray();
+        message = "";
     }
 
     private async Task SaveCharacter()

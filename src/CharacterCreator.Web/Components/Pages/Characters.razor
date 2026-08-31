@@ -3,75 +3,95 @@
 @using CharacterCreator.Web.Models
 @inject IHttpClientFactory HttpClientFactory
 
-<PageTitle>Characters</PageTitle>
+@if (loaded)
+{
+    <PageTitle>Characters</PageTitle>
 
-<h1>Characters</h1>
-<p class="text-secondary">This page calls the API read example. Add create, update, and delete next.</p>
-<CharacterCreatorCard/>
+    <h1>Characters</h1>
+    <p class="text-secondary">This page calls the API read example. Add create, update, and delete next.</p>
+    <CharacterCreatorCard/>
 
-@if (errorMessage is not null)
-{
-    <p class="text-danger">@errorMessage</p>
-}
-else if (_characters is null)
-{
-    <p>Loading...</p>
-}
-else if (_characters.Count == 0)
-{
-    <p>No characters yet.</p>
-}
-else
-{
-    <ul>
-        @foreach (var character in _displayCharacters)
-        {
-            <li>
-                <strong>@character.Name</strong>
-                — @character.Species.Name @character.CharacterClass.Name @character.Background.Name
-            </li>
-        }
-    </ul>
+    @if (errorMessage is not null)
+    {
+        <p class="text-danger">@errorMessage</p>
+    }
+    else if (_displayCharacters.Count == 0)
+    {
+        <p>No characters yet.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var character in _displayCharacters)
+            {
+                <li>
+                    <strong>@character.Name</strong>
+                    — @character.Species.Name @character.CharacterClass.Name @character.Background.Name
+                    @if (character.CharacterImage.Length > 0)
+                    {
+                        <img class="character-thumb" src="@ImageDataUrl.FromBytes(character.CharacterImage)" alt="@character.Name" />
+                    }
+                </li>
+            }
+        </ul>
+    }
 }
 
 @code {
-    private List<Character> _characters;
-    private List<DisplayCharacter> _displayCharacters;
+    private List<DisplayCharacter> _displayCharacters = new List<DisplayCharacter>();
+    private bool loaded = false;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            var client = HttpClientFactory.CreateClient("Api");
-            _characters = await client.GetFromJsonAsync<List<Character>>("api/characters")
-                ?? new();
             await BuildList();
         }
         catch (HttpRequestException)
         {
             errorMessage = "Could not reach the API. Start CharacterCreator.Api, then refresh this page.";
         }
-        
+        loaded = true;
     }
 
     private async Task BuildList()
     {
         var client = HttpClientFactory.CreateClient("Api");
-        _characters = await client.GetFromJsonAsync<List<Character>>("api/characters") ?? new List<Character>();
-        var allClasses = new List<CharacterClass>();
-        var allSpecies = new List<Species>();
-        var allBackground = new List<Background>();
-        foreach (var character in _characters)
+        var characters = await client.GetFromJsonAsync<List<Character>>("api/characters") ?? new List<Character>();
+        var allClasses = await client.GetFromJsonAsync<List<CharacterClass>>("api/characterclass") ?? new List<CharacterClass>();
+        var allSpecies = await client.GetFromJsonAsync<List<Species>>("api/species") ?? new List<Species>();
+        var allBackground = await client.GetFromJsonAsync<List<Background>>("api/background") ?? new List<Background>();
+        
+        foreach (var character in characters)
         {
             var displayCharacter = new DisplayCharacter();
             displayCharacter.Name = character.Name;
-            var foundSpecies = allSpecies.First(x => x.Id == character.SpeciesId);
-            var foundBackground = allBackground.First(x => x.Id == character.BackgroundId);
-            var foundClass = allClasses.First(x => x.Id == character.ClassId);
-            displayCharacter.Species = foundSpecies;
-            displayCharacter.Background = foundBackground;
-            displayCharacter.CharacterClass = foundClass;
+            var foundSpecies = allSpecies.FirstOrDefault(x => x.Id == character.SpeciesId);
+            var foundBackground = allBackground.FirstOrDefault(x => x.Id == character.BackgroundId);
+            var foundClass = allClasses.FirstOrDefault(x => x.Id == character.ClassId);
+            displayCharacter.Id = character.Id;
+            displayCharacter.Species = foundSpecies ?? new Species()
+            {
+                Id = 0,
+                Name = "Not Set",
+                Description = "The Species was not set"
+            };
+            displayCharacter.Background = foundBackground ?? new Background()
+            {
+                Id = 0,
+                Name = "Not Set",
+                Description = "The Background was not set"
+            };
+            displayCharacter.CharacterClass = foundClass ?? new CharacterClass()
+            {
+                Id = 0,
+                Name = "Not Set",
+                Description = "The Class was not set"
+            };
+            displayCharacter.CharacterImage = character.CharacterImage;
+
+            _displayCharacters?.Add(displayCharacter);
         }
     }
 
@@ -79,8 +99,9 @@ else
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public Species Species { get; set; }
-        public CharacterClass CharacterClass { get; set; }
-        public Background Background { get; set; }
+        public Species Species { get; set; } = new();
+        public CharacterClass CharacterClass { get; set; } = new();
+        public Background Background { get; set; } = new();
+        public byte[] CharacterImage { get; set; } = [];
     }
 }
